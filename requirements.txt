@@ -1,5 +1,5 @@
 streamlit
-transformers
-peft
+requests
+transformers==4.36.2
 torch
-re
+peft
