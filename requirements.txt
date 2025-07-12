@@ -3,3 +3,7 @@ requests
 transformers==4.36.2
 torch
 peft
+fastapi
+uvicorn
+pandas
+openpyxl
