@@ -1,29 +1,17 @@
 import streamlit as st
 import time
 import re
-import os
-import requests
 
-# 🔗 رابط الـ backend (تحليل الترجمة)
-BACKEND_URL = os.getenv("BACKEND_URL")
-
-# تحليل الترجمة (الاتصال مع backend API)
-@st.cache_data(show_spinner=False)
+# ✅ تحليل الترجمة مباشرة داخل Streamlit
 def analyze_translation(english, arabic):
-    if not BACKEND_URL:
-        return "❌ BACKEND_URL not set. Please set it using 'export BACKEND_URL=...'"
-    try:
-        resp = requests.post(
-            f"{BACKEND_URL.rstrip('/')}/analyze",
-            json={"english": english, "arabic": arabic},
-            timeout=120,
-        )
-        resp.raise_for_status()
-        return resp.json().get("analysis", "[No analysis returned]")
-    except Exception as e:
-        return f"❌ Error contacting backend: {e}"
+    if "الآن" not in arabic and "في هذه اللحظة" not in arabic:
+        return "❌ الترجمة غير دقيقة: لم تتضمن عنصر الاستمرارية مثل 'الآن' أو 'في هذه اللحظة'."
+    elif "قرأت" in arabic or "شاهدت" in arabic or "طبخت" in arabic:
+        return "❌ الترجمة خاطئة: استخدمتي الماضي بدلًا من المضارع المستمر."
+    else:
+        return "✅ الترجمة تبدو دقيقة وتعكس الاستمرارية."
 
-# اكتشاف اللغة المدخلة
+# ✅ كشف اللغة
 def detect_language(text):
     english_pattern = re.compile(r'^[A-Za-z0-9\s.,?!\'\";:-]+$')
     arabic_pattern = re.compile(r'^[\u0600-\u06FF\s0-9.,؟!،؛:]+$')
@@ -33,10 +21,9 @@ def detect_language(text):
         return "ar"
     return None
 
-# واجهة المستخدم
+# ✅ واجهة Streamlit
 st.title("💬 Translation Chatbot")
 
-# حالة الجلسة
 if "step" not in st.session_state:
     st.session_state.step = 1
     st.session_state.english_sentence = ""
@@ -50,7 +37,6 @@ def add_message(role, content):
     with st.chat_message(role):
         st.markdown(content)
 
-# الرسائل السابقة
 if not st.session_state.messages:
     add_message("assistant", "👋 Hello! I’m your translation assistant.")
     add_message("assistant", "Please type the English sentence you'd like to translate.")
@@ -59,7 +45,6 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# إدخال المستخدم
 prompt = st.chat_input("Type your message here...")
 
 if prompt:
